@@ -2,37 +2,14 @@ package gokui
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/pingcap/tidb/parser"
 	"github.com/pingcap/tidb/parser/ast"
 	_ "github.com/pingcap/tidb/types/parser_driver"
-	"github.com/urfave/cli/v2"
 )
 
-func GenerateSelectAction(cCtx *cli.Context) error {
-	var r io.Reader = os.Stdin
-	var w io.Writer = os.Stdout
-
-	bytes, err := io.ReadAll(r)
-	if err != nil {
-		return err
-	}
-	sql := string(bytes)
-
-	out, err := generateSelect(sql)
-	if err != nil {
-		return err
-	}
-
-	w.Write([]byte(out))
-
-	return nil
-}
-
-func generateSelect(in string) (string, error) {
+func GenerateSelect(in string) (string, error) {
 	stmtNode, err := parse(in)
 	if err != nil {
 		return "", err

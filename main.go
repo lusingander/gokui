@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
 
@@ -19,7 +20,7 @@ func main() {
 					{
 						Name:   "select",
 						Usage:  "Generate `SELECT`",
-						Action: gokui.GenerateSelectAction,
+						Action: generateSelectAction,
 					},
 				},
 			},
@@ -32,4 +33,24 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func generateSelectAction(cCtx *cli.Context) error {
+	var r io.Reader = os.Stdin
+	var w io.Writer = os.Stdout
+
+	bytes, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	sql := string(bytes)
+
+	out, err := gokui.GenerateSelect(sql)
+	if err != nil {
+		return err
+	}
+
+	w.Write([]byte(out))
+
+	return nil
 }
