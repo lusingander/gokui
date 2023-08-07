@@ -9,7 +9,7 @@ import (
 	_ "github.com/pingcap/tidb/types/parser_driver"
 )
 
-func GenerateSelect(in string) (string, error) {
+func GenerateSelect(in string, opt GenerateSelectOpeions) (string, error) {
 	stmtNode, err := parse(in)
 	if err != nil {
 		return "", err
@@ -17,11 +17,21 @@ func GenerateSelect(in string) (string, error) {
 
 	switch n := stmtNode.(type) {
 	case *ast.CreateTableStmt:
-		sql := buildSelectFromCreateTable(n).singleLine()
+		s := buildSelectFromCreateTable(n)
+		var sql string
+		if opt.NewLine {
+			sql = s.multiLine()
+		} else {
+			sql = s.singleLine()
+		}
 		return sql, nil
 	default:
 		return "", fmt.Errorf("`%v` statement is not supported", ast.GetStmtLabel(stmtNode))
 	}
+}
+
+type GenerateSelectOpeions struct {
+	NewLine bool
 }
 
 type Select struct {
@@ -49,6 +59,34 @@ func (s *Select) singleLine() string {
 	b.WriteString("FROM")
 	b.WriteString(" ")
 	b.WriteString(s.table)
+	b.WriteString(";")
+
+	return b.String()
+}
+
+func (s *Select) multiLine() string {
+	nl := "\n"
+	ind := strings.Repeat(" ", 2)
+
+	b := &strings.Builder{}
+	b.WriteString("SELECT")
+	b.WriteString(nl)
+
+	cl := len(s.cols)
+	for i, c := range s.cols {
+		b.WriteString(ind)
+		b.WriteString(c)
+		if i < cl-1 {
+			b.WriteString(",")
+		}
+		b.WriteString(nl)
+	}
+
+	b.WriteString("FROM")
+	b.WriteString(nl)
+	b.WriteString(ind)
+	b.WriteString(s.table)
+	b.WriteString(nl)
 	b.WriteString(";")
 
 	return b.String()

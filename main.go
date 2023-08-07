@@ -21,6 +21,12 @@ func main() {
 						Name:   "select",
 						Usage:  "Generate `SELECT`",
 						Action: generateSelectAction,
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "newline",
+								Value: false,
+							},
+						},
 					},
 				},
 			},
@@ -45,7 +51,13 @@ func generateSelectAction(cCtx *cli.Context) error {
 	}
 	sql := string(bytes)
 
-	out, err := gokui.GenerateSelect(sql)
+	newLine := cCtx.Bool("newline")
+
+	opt := gokui.GenerateSelectOpeions{
+		NewLine: newLine,
+	}
+
+	out, err := gokui.GenerateSelect(sql, opt)
 	if err != nil {
 		return err
 	}
