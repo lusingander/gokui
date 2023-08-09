@@ -53,7 +53,7 @@ func generateSelectAction(cCtx *cli.Context) error {
 
 	newLine := cCtx.Bool("newline")
 
-	opt := gokui.GenerateSelectOpeions{
+	opt := gokui.GenerateSelectOptions{
 		NewLine: newLine,
 	}
 

@@ -6,7 +6,7 @@ func TestGenerateSelect(t *testing.T) {
 	tests := []struct {
 		name string
 		sql  string
-		opt  GenerateSelectOpeions
+		opt  GenerateSelectOptions
 		want string
 	}{
 		{
@@ -19,7 +19,7 @@ func TestGenerateSelect(t *testing.T) {
     primary key (user_id)
 );
 `,
-			opt: GenerateSelectOpeions{
+			opt: GenerateSelectOptions{
 				NewLine: false,
 			},
 			want: `SELECT user_id, name, age, created_at FROM users;`,
@@ -34,7 +34,7 @@ func TestGenerateSelect(t *testing.T) {
     primary key (user_id)
 );
 `,
-			opt: GenerateSelectOpeions{
+			opt: GenerateSelectOptions{
 				NewLine: true,
 			},
 			want: `SELECT

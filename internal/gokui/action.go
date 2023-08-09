@@ -9,7 +9,7 @@ import (
 	_ "github.com/pingcap/tidb/types/parser_driver"
 )
 
-func GenerateSelect(in string, opt GenerateSelectOpeions) (string, error) {
+func GenerateSelect(in string, opt GenerateSelectOptions) (string, error) {
 	stmtNode, err := parse(in)
 	if err != nil {
 		return "", err
@@ -30,7 +30,7 @@ func GenerateSelect(in string, opt GenerateSelectOpeions) (string, error) {
 	}
 }
 
-type GenerateSelectOpeions struct {
+type GenerateSelectOptions struct {
 	NewLine bool
 }
 
