@@ -75,6 +75,27 @@ func TestGenerateInsert(t *testing.T) {
 			},
 			want: `INSERT INTO users (user_id, name, age, created_at) VALUES ('', '', 0, '');`,
 		},
+		{
+			name: "newline = true",
+			sql:  createTableUsers,
+			opt: GenerateInsertOptions{
+				NewLine: true,
+			},
+			want: `INSERT INTO users
+(
+  user_id,
+  name,
+  age,
+  created_at
+)
+VALUES
+(
+  '',
+  '',
+  0,
+  ''
+);`,
+		},
 	}
 
 	for _, tt := range tests {

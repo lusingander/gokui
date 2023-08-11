@@ -105,7 +105,7 @@ func GenerateInsert(in string, opt GenerateInsertOptions) (string, error) {
 		i := buildInsertFromCreateTable(n)
 		var sql string
 		if opt.NewLine {
-			panic("not implemented yet")
+			sql = i.multiLine()
 		} else {
 			sql = i.singleLine()
 		}
@@ -162,6 +162,49 @@ func (i *Insert) singleLine() string {
 	b.WriteString(defaultVals)
 	b.WriteString(")")
 	b.WriteString(";")
+	return b.String()
+}
+
+func (i *Insert) multiLine() string {
+	nl := "\n"
+	ind := strings.Repeat(" ", 2)
+	cl := len(i.cols)
+
+	b := &strings.Builder{}
+	b.WriteString("INSERT INTO")
+	b.WriteString(" ")
+	b.WriteString(i.table)
+	b.WriteString(nl)
+
+	b.WriteString("(")
+	b.WriteString(nl)
+	for i, c := range i.cols {
+		b.WriteString(ind)
+		b.WriteString(c.name)
+		if i < cl-1 {
+			b.WriteString(",")
+		}
+		b.WriteString(nl)
+	}
+	b.WriteString(")")
+	b.WriteString(nl)
+
+	b.WriteString("VALUES")
+	b.WriteString(nl)
+	b.WriteString("(")
+	b.WriteString(nl)
+
+	for i, c := range i.cols {
+		b.WriteString(ind)
+		b.WriteString(c.columnType.defaultValue())
+		if i < cl-1 {
+			b.WriteString(",")
+		}
+		b.WriteString(nl)
+	}
+	b.WriteString(")")
+	b.WriteString(";")
+
 	return b.String()
 }
 
