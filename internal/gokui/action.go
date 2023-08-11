@@ -6,6 +6,8 @@ import (
 
 	"github.com/pingcap/tidb/parser"
 	"github.com/pingcap/tidb/parser/ast"
+	"github.com/pingcap/tidb/parser/mysql"
+	"github.com/pingcap/tidb/types"
 	_ "github.com/pingcap/tidb/types/parser_driver"
 )
 
@@ -92,6 +94,77 @@ func (s *Select) multiLine() string {
 	return b.String()
 }
 
+func GenerateInsert(in string, opt GenerateInsertOptions) (string, error) {
+	stmtNode, err := parse(in)
+	if err != nil {
+		return "", err
+	}
+
+	switch n := stmtNode.(type) {
+	case *ast.CreateTableStmt:
+		i := buildInsertFromCreateTable(n)
+		var sql string
+		if opt.NewLine {
+			panic("not implemented yet")
+		} else {
+			sql = i.singleLine()
+		}
+		return sql, nil
+	default:
+		return "", fmt.Errorf("`%v` statement is not supported", ast.GetStmtLabel(stmtNode))
+	}
+}
+
+type GenerateInsertOptions struct {
+	NewLine bool
+}
+
+type Insert struct {
+	table string
+	cols  []column
+}
+
+func buildInsertFromCreateTable(stmt *ast.CreateTableStmt) *Insert {
+	table := stmt.Table.Name.String()
+	cols := make([]column, len(stmt.Cols))
+	for i, c := range stmt.Cols {
+		cols[i] = column{
+			name:       c.Name.Name.String(),
+			columnType: columnTypeFrom(c.Tp),
+		}
+	}
+	return &Insert{table, cols}
+}
+
+func (i *Insert) singleLine() string {
+	cns := make([]string, len(i.cols))
+	dvs := make([]string, len(i.cols))
+	for idx, c := range i.cols {
+		cns[idx] = c.name
+		dvs[idx] = c.columnType.defaultValue()
+	}
+
+	joinedCols := strings.Join(cns, ", ")
+	defaultVals := strings.Join(dvs, ", ")
+
+	b := &strings.Builder{}
+	b.WriteString("INSERT INTO")
+	b.WriteString(" ")
+	b.WriteString(i.table)
+	b.WriteString(" ")
+	b.WriteString("(")
+	b.WriteString(joinedCols)
+	b.WriteString(")")
+	b.WriteString(" ")
+	b.WriteString("VALUES")
+	b.WriteString(" ")
+	b.WriteString("(")
+	b.WriteString(defaultVals)
+	b.WriteString(")")
+	b.WriteString(";")
+	return b.String()
+}
+
 func parse(sql string) (ast.StmtNode, error) {
 	p := parser.New()
 	stmtNode, err := p.ParseOneStmt(sql, "", "")
@@ -99,4 +172,46 @@ func parse(sql string) (ast.StmtNode, error) {
 		return nil, err
 	}
 	return stmtNode, nil
+}
+
+type column struct {
+	name string
+	columnType
+}
+
+type columnType int
+
+const (
+	unknown columnType = iota
+	numberLike
+	stringLike
+)
+
+func columnTypeFrom(tp *types.FieldType) columnType {
+	switch tp.GetType() {
+	case mysql.TypeTiny,
+		mysql.TypeShort,
+		mysql.TypeInt24,
+		mysql.TypeLong,
+		mysql.TypeLonglong,
+		mysql.TypeBit,
+		mysql.TypeYear,
+		mysql.TypeFloat,
+		mysql.TypeDouble,
+		mysql.TypeNewDecimal:
+		return numberLike
+	default:
+		return stringLike
+	}
+}
+
+func (t columnType) defaultValue() string {
+	switch t {
+	case numberLike:
+		return `0`
+	case stringLike:
+		return `''`
+	default:
+		return `''`
+	}
 }

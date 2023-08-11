@@ -28,6 +28,17 @@ func main() {
 							},
 						},
 					},
+					{
+						Name:   "insert",
+						Usage:  "Generate `INSERT`",
+						Action: generateInsertAction,
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "newline",
+								Value: false,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -58,6 +69,32 @@ func generateSelectAction(cCtx *cli.Context) error {
 	}
 
 	out, err := gokui.GenerateSelect(sql, opt)
+	if err != nil {
+		return err
+	}
+
+	w.Write([]byte(out))
+
+	return nil
+}
+
+func generateInsertAction(cCtx *cli.Context) error {
+	var r io.Reader = os.Stdin
+	var w io.Writer = os.Stdout
+
+	bytes, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	sql := string(bytes)
+
+	newLine := cCtx.Bool("newline")
+
+	opt := gokui.GenerateInsertOptions{
+		NewLine: newLine,
+	}
+
+	out, err := gokui.GenerateInsert(sql, opt)
 	if err != nil {
 		return err
 	}
