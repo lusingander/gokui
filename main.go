@@ -11,7 +11,8 @@ import (
 
 func main() {
 	app := cli.App{
-		Name: "gokui",
+		Name:  "gokui",
+		Usage: "SQL utilities",
 		Commands: []*cli.Command{
 			{
 				Name:  "generate",
