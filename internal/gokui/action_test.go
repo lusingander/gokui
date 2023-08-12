@@ -68,18 +68,20 @@ func TestGenerateInsert(t *testing.T) {
 		want string
 	}{
 		{
-			name: "newline = false",
+			name: "newline = false, insert-select = false",
 			sql:  createTableUsers,
 			opt: GenerateInsertOptions{
-				NewLine: false,
+				NewLine:      false,
+				InsertSelect: false,
 			},
 			want: `INSERT INTO users (user_id, name, age, created_at) VALUES ('', '', 0, '');`,
 		},
 		{
-			name: "newline = true",
+			name: "newline = true, insert-select = false",
 			sql:  createTableUsers,
 			opt: GenerateInsertOptions{
-				NewLine: true,
+				NewLine:      true,
+				InsertSelect: false,
 			},
 			want: `INSERT INTO users
 (
@@ -95,6 +97,38 @@ VALUES
   0,
   ''
 );`,
+		},
+		{
+			name: "newline = false, insert-select = true",
+			sql:  createTableUsers,
+			opt: GenerateInsertOptions{
+				NewLine:      false,
+				InsertSelect: true,
+			},
+			want: `INSERT INTO users (user_id, name, age, created_at) SELECT user_id, name, age, created_at FROM users;`,
+		},
+		{
+			name: "newline = true, insert-select = true",
+			sql:  createTableUsers,
+			opt: GenerateInsertOptions{
+				NewLine:      true,
+				InsertSelect: true,
+			},
+			want: `INSERT INTO users
+(
+  user_id,
+  name,
+  age,
+  created_at
+)
+SELECT
+  user_id,
+  name,
+  age,
+  created_at
+FROM
+  users
+;`,
 		},
 	}
 

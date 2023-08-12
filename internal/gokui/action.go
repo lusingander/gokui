@@ -104,10 +104,18 @@ func GenerateInsert(in string, opt GenerateInsertOptions) (string, error) {
 	case *ast.CreateTableStmt:
 		i := buildInsertFromCreateTable(n)
 		var sql string
-		if opt.NewLine {
-			sql = i.multiLine()
+		if opt.InsertSelect {
+			if opt.NewLine {
+				sql = i.insertSelectMultiLine()
+			} else {
+				sql = i.insertSelectSingleLine()
+			}
 		} else {
-			sql = i.singleLine()
+			if opt.NewLine {
+				sql = i.multiLine()
+			} else {
+				sql = i.singleLine()
+			}
 		}
 		return sql, nil
 	default:
@@ -116,7 +124,8 @@ func GenerateInsert(in string, opt GenerateInsertOptions) (string, error) {
 }
 
 type GenerateInsertOptions struct {
-	NewLine bool
+	NewLine      bool
+	InsertSelect bool
 }
 
 type Insert struct {
@@ -203,6 +212,81 @@ func (i *Insert) multiLine() string {
 		b.WriteString(nl)
 	}
 	b.WriteString(")")
+	b.WriteString(";")
+
+	return b.String()
+}
+
+func (i *Insert) insertSelectSingleLine() string {
+	cns := make([]string, len(i.cols))
+	dvs := make([]string, len(i.cols))
+	for idx, c := range i.cols {
+		cns[idx] = c.name
+		dvs[idx] = c.columnType.defaultValue()
+	}
+
+	joinedCols := strings.Join(cns, ", ")
+
+	b := &strings.Builder{}
+	b.WriteString("INSERT INTO")
+	b.WriteString(" ")
+	b.WriteString(i.table)
+	b.WriteString(" ")
+	b.WriteString("(")
+	b.WriteString(joinedCols)
+	b.WriteString(")")
+	b.WriteString(" ")
+	b.WriteString("SELECT")
+	b.WriteString(" ")
+	b.WriteString(joinedCols)
+	b.WriteString(" ")
+	b.WriteString("FROM")
+	b.WriteString(" ")
+	b.WriteString(i.table)
+	b.WriteString(";")
+	return b.String()
+}
+
+func (i *Insert) insertSelectMultiLine() string {
+	nl := "\n"
+	ind := strings.Repeat(" ", 2)
+	cl := len(i.cols)
+
+	b := &strings.Builder{}
+	b.WriteString("INSERT INTO")
+	b.WriteString(" ")
+	b.WriteString(i.table)
+	b.WriteString(nl)
+
+	b.WriteString("(")
+	b.WriteString(nl)
+	for i, c := range i.cols {
+		b.WriteString(ind)
+		b.WriteString(c.name)
+		if i < cl-1 {
+			b.WriteString(",")
+		}
+		b.WriteString(nl)
+	}
+	b.WriteString(")")
+	b.WriteString(nl)
+
+	b.WriteString("SELECT")
+	b.WriteString(nl)
+
+	for i, c := range i.cols {
+		b.WriteString(ind)
+		b.WriteString(c.name)
+		if i < cl-1 {
+			b.WriteString(",")
+		}
+		b.WriteString(nl)
+	}
+	b.WriteString("FROM")
+	b.WriteString(nl)
+	b.WriteString(ind)
+	b.WriteString(i.table)
+	b.WriteString(nl)
 	b.WriteString(";")
 
 	return b.String()
