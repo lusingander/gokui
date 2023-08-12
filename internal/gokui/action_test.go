@@ -1,6 +1,9 @@
 package gokui
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 const (
 	createTableUsers = `
@@ -16,22 +19,19 @@ CREATE TABLE users (
 
 func TestGenerateSelect(t *testing.T) {
 	tests := []struct {
-		name string
 		sql  string
 		opt  GenerateSelectOptions
 		want string
 	}{
 		{
-			name: "newline = false",
-			sql:  createTableUsers,
+			sql: createTableUsers,
 			opt: GenerateSelectOptions{
 				NewLine: false,
 			},
 			want: `SELECT user_id, name, age, created_at FROM users;`,
 		},
 		{
-			name: "newline = true",
-			sql:  createTableUsers,
+			sql: createTableUsers,
 			opt: GenerateSelectOptions{
 				NewLine: true,
 			},
@@ -48,7 +48,7 @@ FROM
 
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%+v", tt.opt), func(t *testing.T) {
 			got, err := GenerateSelect(tt.sql, tt.opt)
 			if err != nil {
 				t.Errorf("error occurred: %v", err)
@@ -62,14 +62,12 @@ FROM
 
 func TestGenerateInsert(t *testing.T) {
 	tests := []struct {
-		name string
 		sql  string
 		opt  GenerateInsertOptions
 		want string
 	}{
 		{
-			name: "newline = false, insert-select = false",
-			sql:  createTableUsers,
+			sql: createTableUsers,
 			opt: GenerateInsertOptions{
 				NewLine:      false,
 				InsertSelect: false,
@@ -77,8 +75,7 @@ func TestGenerateInsert(t *testing.T) {
 			want: `INSERT INTO users (user_id, name, age, created_at) VALUES ('', '', 0, '');`,
 		},
 		{
-			name: "newline = true, insert-select = false",
-			sql:  createTableUsers,
+			sql: createTableUsers,
 			opt: GenerateInsertOptions{
 				NewLine:      true,
 				InsertSelect: false,
@@ -99,8 +96,7 @@ VALUES
 );`,
 		},
 		{
-			name: "newline = false, insert-select = true",
-			sql:  createTableUsers,
+			sql: createTableUsers,
 			opt: GenerateInsertOptions{
 				NewLine:      false,
 				InsertSelect: true,
@@ -108,8 +104,7 @@ VALUES
 			want: `INSERT INTO users (user_id, name, age, created_at) SELECT user_id, name, age, created_at FROM users;`,
 		},
 		{
-			name: "newline = true, insert-select = true",
-			sql:  createTableUsers,
+			sql: createTableUsers,
 			opt: GenerateInsertOptions{
 				NewLine:      true,
 				InsertSelect: true,
@@ -134,7 +129,7 @@ FROM
 
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%+v", tt.opt), func(t *testing.T) {
 			got, err := GenerateInsert(tt.sql, tt.opt)
 			if err != nil {
 				t.Errorf("error occurred: %v", err)
